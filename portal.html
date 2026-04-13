@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦕 Dino Games – Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root {
+  --math-color: #3aff3a;
+  --math-dark:  #1a6a1a;
+  --math-bg:    #050f05;
+  --lang-color: #6666ff;
+  --lang-dark:  #2222aa;
+  --lang-bg:    #05050f;
+  --gold:       #ffd040;
+  --dark:       #050510;
+  --scan-line:  rgba(0,0,0,0.08);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--dark);
+  min-height: 100vh;
+  font-family: 'Press Start 2P', monospace;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Scanlines overlay ── */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:999; pointer-events:none;
+  background: repeating-linear-gradient(
+    0deg,
+    var(--scan-line) 0px,
+    var(--scan-line) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* ── Stars background ── */
+.stars {
+  position:fixed; inset:0; z-index:0; overflow:hidden;
+}
+.star {
+  position:absolute; border-radius:50%; background:#fff;
+  animation: twinkle var(--d, 3s) var(--delay, 0s) infinite alternate;
+}
+@keyframes twinkle { from{opacity:.1} to{opacity:.9} }
+
+/* ── Header ── */
+header {
+  position: relative; z-index:10;
+  text-align:center; padding: 48px 20px 28px;
+  width:100%;
+}
+.title-wrap {
+  display:inline-block; position:relative;
+}
+.title-shadow {
+  position:absolute; top:4px; left:4px;
+  font-size: clamp(22px, 5vw, 40px);
+  color:#0a2a0a; white-space:nowrap;
+}
+.title-main {
+  position:relative;
+  font-size: clamp(22px, 5vw, 40px);
+  color: var(--math-color);
+  text-shadow: 0 0 20px rgba(58,255,58,0.5), 0 0 60px rgba(58,255,58,0.2);
+  white-space:nowrap;
+  animation: glowPulse 2.5s ease-in-out infinite alternate;
+}
+@keyframes glowPulse {
+  from { text-shadow: 0 0 10px rgba(58,255,58,0.4); }
+  to   { text-shadow: 0 0 30px rgba(58,255,58,0.9), 0 0 60px rgba(58,255,58,0.3); }
+}
+.subtitle {
+  margin-top:16px;
+  font-size: clamp(6px, 1.5vw, 9px);
+  color: var(--gold);
+  letter-spacing:2px;
+  opacity:.85;
+}
+
+/* ── Canvas for animated dino ── */
+#stage {
+  position:relative; z-index:10;
+  width: min(720px, 100%);
+  margin: 0 auto;
+}
+#dino-canvas {
+  display:block; width:100%; height:auto;
+  image-rendering:pixelated;
+}
+
+/* ── Cards ── */
+.cards {
+  position:relative; z-index:10;
+  display:flex; gap:24px; flex-wrap:wrap; justify-content:center;
+  padding: 0 20px 60px;
+  width:100%; max-width:800px;
+}
+
+.card {
+  position:relative;
+  flex:1; min-width:260px; max-width:340px;
+  border-radius:16px; overflow:hidden;
+  text-decoration:none;
+  transition: transform .2s, box-shadow .2s;
+  cursor:pointer;
+  animation: cardFloat var(--float-d, 4s) ease-in-out infinite alternate;
+}
+.card:hover { transform: translateY(-8px) scale(1.02); }
+
+@keyframes cardFloat {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-6px); }
+}
+.card--math { --float-d:3.8s; }
+.card--lang { --float-d:4.3s; }
+.card:hover { animation-play-state:paused; }
+
+.card__bg {
+  position:absolute; inset:0; z-index:0;
+}
+.card--math .card__bg {
+  background: radial-gradient(ellipse at 30% 40%, #0a2a0a 0%, #020a02 70%);
+  border:2px solid var(--math-color);
+  box-shadow: 0 0 0 1px #0a2a0a, 0 0 30px rgba(58,255,58,0.15), inset 0 0 30px rgba(58,255,58,0.05);
+}
+.card--lang .card__bg {
+  background: radial-gradient(ellipse at 30% 40%, #0a0a2a 0%, #02020a 70%);
+  border:2px solid var(--lang-color);
+  box-shadow: 0 0 0 1px #0a0a2a, 0 0 30px rgba(102,102,255,0.15), inset 0 0 30px rgba(102,102,255,0.05);
+}
+
+.card__inner {
+  position:relative; z-index:1;
+  padding:32px 28px 28px;
+}
+
+.card__icon {
+  font-size:52px; line-height:1;
+  margin-bottom:16px;
+  display:block;
+  filter: drop-shadow(0 0 12px currentColor);
+}
+.card--math .card__icon { color: var(--math-color); }
+.card--lang .card__icon { color: var(--lang-color); }
+
+.card__name {
+  font-size:clamp(11px, 2.5vw, 16px);
+  margin-bottom:10px;
+  letter-spacing:1px;
+}
+.card--math .card__name { color: var(--math-color); }
+.card--lang .card__name { color: var(--lang-color); }
+
+.card__desc {
+  font-size:clamp(5px, 1.2vw, 7px);
+  color:rgba(255,255,255,0.5);
+  line-height:2.2;
+  margin-bottom:20px;
+}
+
+.card__tags {
+  display:flex; flex-wrap:wrap; gap:6px; margin-bottom:22px;
+}
+.tag {
+  font-size:5px; padding:4px 8px; border-radius:4px;
+  letter-spacing:1px;
+}
+.card--math .tag { background:rgba(58,255,58,.12); color:var(--math-color); border:1px solid rgba(58,255,58,.3); }
+.card--lang .tag { background:rgba(102,102,255,.12); color:var(--lang-color); border:1px solid rgba(102,102,255,.3); }
+
+.card__btn {
+  display:block; width:100%;
+  padding:12px;  border-radius:8px;
+  font-family:'Press Start 2P', monospace;
+  font-size:clamp(7px, 1.5vw, 10px);
+  text-align:center; letter-spacing:1px;
+  border:none; cursor:pointer;
+  transition: transform .1s, box-shadow .1s;
+}
+.card--math .card__btn {
+  background:var(--math-color); color:#000;
+  box-shadow:0 4px 0 var(--math-dark);
+}
+.card--lang .card__btn {
+  background:var(--lang-color); color:#fff;
+  box-shadow:0 4px 0 var(--lang-dark);
+}
+.card__btn:active {
+  transform:translateY(3px);
+  box-shadow:0 1px 0 currentColor;
+}
+
+/* Corner decorations */
+.card__corner {
+  position:absolute; font-size:8px; opacity:.2;
+  font-family: monospace;
+}
+.card__corner--tl { top:8px; left:10px; }
+.card__corner--tr { top:8px; right:10px; }
+.card__corner--bl { bottom:8px; left:10px; }
+.card__corner--br { bottom:8px; right:10px; }
+
+/* ── Footer ── */
+footer {
+  position:relative; z-index:10;
+  text-align:center;
+  font-size:6px; color:rgba(255,255,255,.2);
+  padding-bottom:24px; letter-spacing:1px;
+}
+
+/* ── Responsive ── */
+@media (max-width:600px) {
+  header { padding:32px 16px 20px; }
+  .cards { gap:16px; padding-bottom:40px; }
+  .card__inner { padding:24px 20px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<!-- Header -->
+<header>
+  <div class="title-wrap">
+    <div class="title-shadow">🦕 DINO GAMES</div>
+    <div class="title-main">🦕 DINO GAMES</div>
+  </div>
+  <p class="subtitle">¡Aprende jugando con el dinosaurio!</p>
+</header>
+
+<!-- Animated Dino Stage -->
+<div id="stage">
+  <canvas id="dino-canvas" width="720" height="90"></canvas>
+</div>
+
+<!-- Cards -->
+<div class="cards">
+
+  <a class="card card--math" href="https://crispacso.github.io/dinomatch/" target="_blank" rel="noopener">
+    <div class="card__bg"></div>
+    <div class="card__corner card__corner--tl">┌</div>
+    <div class="card__corner card__corner--tr">┐</div>
+    <div class="card__corner card__corner--bl">└</div>
+    <div class="card__corner card__corner--br">┘</div>
+    <div class="card__inner">
+      <span class="card__icon">×</span>
+      <div class="card__name">DinoMath</div>
+      <div class="card__desc">
+        Respondé operaciones matemáticas<br>
+        para que el dino salte los obstáculos.
+      </div>
+      <div class="card__tags">
+        <span class="tag">✖ Multiplicación</span>
+        <span class="tag">÷ División</span>
+        <span class="tag">+ Sumas</span>
+        <span class="tag">− Restas</span>
+        <span class="tag">30 niveles</span>
+        <span class="tag">3 vidas</span>
+      </div>
+      <button class="card__btn">▶ JUGAR DINOMATH</button>
+    </div>
+  </a>
+
+  <a class="card card--lang" href="https://crispacso.github.io/dinolengua/" target="_blank" rel="noopener">
+    <div class="card__bg"></div>
+    <div class="card__corner card__corner--tl">┌</div>
+    <div class="card__corner card__corner--tr">┐</div>
+    <div class="card__corner card__corner--bl">└</div>
+    <div class="card__corner card__corner--br">┘</div>
+    <div class="card__inner">
+      <span class="card__icon">Aa</span>
+      <div class="card__name">DinoLengua</div>
+      <div class="card__desc">
+        Elegí la letra correcta para<br>
+        que el dino supere cada nivel.
+      </div>
+      <div class="card__tags">
+        <span class="tag">B y V</span>
+        <span class="tag">H muda</span>
+        <span class="tag">C·S·Z</span>
+        <span class="tag">LL y Y</span>
+        <span class="tag">G y J</span>
+        <span class="tag">Tildes</span>
+      </div>
+      <button class="card__btn">▶ JUGAR DINOLENGUA</button>
+    </div>
+  </a>
+
+</div>
+
+<footer>
+  CRISPACSO · DINO GAMES · EDUCACIÓN PRIMARIA
+</footer>
+
+<script>
+// ── Stars ──────────────────────────────────────────
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 80; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const size = .5 + Math.random() * 1.5;
+  s.style.cssText = `
+    width:${size}px; height:${size}px;
+    left:${Math.random()*100}%;
+    top:${Math.random()*100}%;
+    --d:${2+Math.random()*4}s;
+    --delay:${-Math.random()*4}s;
+  `;
+  starsEl.appendChild(s);
+}
+
+// ── Dino canvas animation ─────────────────────────
+const cv  = document.getElementById('dino-canvas');
+const ctx = cv.getContext('2d');
+const CW  = 720, CH = 90;
+const GY  = 78;  // ground Y
+
+let dinoX  = 60;
+let dinoDir = 1;        // 1=right, -1=left
+const SPEED = 2.2;
+const MARGIN = 60;
+let frame = 0;
+
+// Ground
+function drawGround() {
+  // Gradient ground strip
+  const gr = ctx.createLinearGradient(0, GY, 0, CH);
+  gr.addColorStop(0, '#1a3a1a');
+  gr.addColorStop(1, '#0a1a0a');
+  ctx.fillStyle = gr;
+  ctx.fillRect(0, GY, CW, CH - GY);
+  // Bright top edge
+  ctx.fillStyle = '#2a6a2a';
+  ctx.fillRect(0, GY - 2, CW, 3);
+  // Dashes
+  ctx.fillStyle = '#1a4a1a';
+  for (let i = 0; i < 12; i++) {
+    const gx = ((i * 72 - frame * SPEED * dinoDir * .4) % (CW + 72) + CW + 72) % (CW + 72) - 72;
+    ctx.fillRect(gx, GY + 6, 40, 2);
+  }
+}
+
+function drawDinoSprite(x, dir) {
+  const lp  = Math.sin(frame * .22) * 7;
+  const G   = '#5ec45e', DG = '#3a8a3a', BY = '#c0e89a', WH = '#fff', BK = '#111';
+
+  ctx.save();
+  // Flip horizontally when going left
+  if (dir === -1) {
+    ctx.translate(x * 2 + 48, 0);
+    ctx.scale(-1, 1);
+  }
+
+  const dy = GY;
+
+  // Tail
+  ctx.fillStyle = DG;
+  ctx.beginPath();
+  ctx.moveTo(x+3,dy-28); ctx.quadraticCurveTo(x-18,dy-18,x-28,dy-14);
+  ctx.quadraticCurveTo(x-22,dy-10,x-8,dy-12); ctx.quadraticCurveTo(x-2,dy-21,x+3,dy-22);
+  ctx.fill();
+
+  // Back leg
+  ctx.fillStyle = DG;
+  const bly = Math.max(3, 12 - lp);
+  ctx.fillRect(x+16, dy-bly, 8, bly); ctx.fillRect(x+13, dy-3, 13, 3);
+
+  // Body
+  ctx.fillStyle = G;
+  ctx.beginPath(); ctx.roundRect(x+1, dy-44, 30, 20, 6); ctx.fill();
+  ctx.fillStyle = BY;
+  ctx.beginPath(); ctx.roundRect(x+6, dy-38, 18, 13, 4); ctx.fill();
+
+  // Front leg
+  ctx.fillStyle = DG;
+  const fly = Math.max(3, 12 + lp);
+  ctx.fillRect(x+1, dy-fly, 8, fly); ctx.fillRect(x-1, dy-3, 13, 3);
+
+  // Neck
+  ctx.fillStyle = G; ctx.fillRect(x+18, dy-58, 11, 16);
+
+  // Head
+  ctx.fillStyle = G;
+  ctx.beginPath(); ctx.roundRect(x+11, dy-72, 26, 16, [6,6,3,3]); ctx.fill();
+
+  // Spikes
+  ctx.fillStyle = '#7adc7a';
+  for (let i=0;i<3;i++) {
+    ctx.beginPath();
+    ctx.moveTo(x+15+i*6,dy-72); ctx.lineTo(x+18+i*6,dy-80); ctx.lineTo(x+21+i*6,dy-72);
+    ctx.fill();
+  }
+
+  // Snout
+  ctx.fillStyle = DG;
+  ctx.beginPath(); ctx.roundRect(x+31, dy-67, 10, 8, [0,4,4,0]); ctx.fill();
+  ctx.fillStyle='#e8e8e8'; ctx.fillRect(x+33,dy-60,2,2); ctx.fillRect(x+37,dy-60,2,2);
+
+  // Eye
+  ctx.fillStyle=WH; ctx.beginPath(); ctx.arc(x+25,dy-62,4,0,6.28); ctx.fill();
+  ctx.fillStyle=BK; ctx.beginPath(); ctx.arc(x+26,dy-62,2.5,0,6.28); ctx.fill();
+  ctx.fillStyle=WH; ctx.fillRect(x+26,dy-64,2,2);
+
+  // Arm
+  ctx.fillStyle=DG;
+  ctx.beginPath(); ctx.roundRect(x+23,dy-48,6,9,2); ctx.fill();
+
+  ctx.restore();
+}
+
+// Math symbols that float up when dino passes left zone
+// Lang symbols that float up when dino passes right zone
+let floaters = [];
+let lastFloat = 0;
+
+const mathSymbols = ['×','÷','+','−','=','²','√'];
+const langSymbols = ['B','V','H','Z','LL','Y','á','é'];
+
+function spawnFloat(x, y, text, color) {
+  floaters.push({ x, y, text, color, vy:-1.2, life:60, max:60 });
+}
+
+function updateFloaters() {
+  for (let i = floaters.length-1; i >= 0; i--) {
+    const f = floaters[i];
+    f.y += f.vy; f.life--;
+    if (f.life <= 0) floaters.splice(i, 1);
+  }
+}
+
+function drawFloaters() {
+  floaters.forEach(f => {
+    ctx.globalAlpha = f.life / f.max;
+    ctx.fillStyle = f.color;
+    ctx.font = "bold 11px 'Press Start 2P',monospace";
+    ctx.textAlign = 'center';
+    ctx.fillText(f.text, f.x, f.y);
+    ctx.textAlign = 'left';
+  });
+  ctx.globalAlpha = 1;
+}
+
+// Labels under each half
+function drawLabels() {
+  // Left zone: DinoMath
+  ctx.fillStyle = 'rgba(58,255,58,0.15)';
+  ctx.fillRect(0, 0, CW/2, GY-2);
+  ctx.fillStyle = 'rgba(58,255,58,0.5)';
+  ctx.font = "6px 'Press Start 2P',monospace";
+  ctx.textAlign = 'center';
+  ctx.fillText('DinoMath', CW/4, 14);
+
+  // Right zone: DinoLengua
+  ctx.fillStyle = 'rgba(102,102,255,0.15)';
+  ctx.fillRect(CW/2, 0, CW/2, GY-2);
+  ctx.fillStyle = 'rgba(102,102,255,0.5)';
+  ctx.fillText('DinoLengua', CW*3/4, 14);
+
+  // Center divider
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4,6]);
+  ctx.beginPath(); ctx.moveTo(CW/2, 0); ctx.lineTo(CW/2, GY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.textAlign = 'left';
+}
+
+function loop() {
+  frame++;
+  ctx.clearRect(0, 0, CW, CH);
+
+  drawLabels();
+  drawGround();
+  drawFloaters();
+  updateFloaters();
+
+  // Move dino
+  dinoX += SPEED * dinoDir;
+
+  // Bounce at edges
+  if (dinoX > CW - MARGIN) { dinoX = CW - MARGIN; dinoDir = -1; }
+  if (dinoX < MARGIN)       { dinoX = MARGIN;       dinoDir =  1; }
+
+  // Spawn symbols near dino
+  if (frame - lastFloat > 28) {
+    lastFloat = frame;
+    const inMathZone = dinoX < CW / 2;
+    const symbols = inMathZone ? mathSymbols : langSymbols;
+    const color   = inMathZone ? '#3aff3a' : '#8888ff';
+    const sym = symbols[Math.floor(Math.random() * symbols.length)];
+    spawnFloat(dinoX + 20 + Math.random()*20, GY - 30, sym, color);
+  }
+
+  drawDinoSprite(dinoX, dinoDir);
+
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+</body>
+</html>
