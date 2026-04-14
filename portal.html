@@ -20,6 +20,9 @@
   --cow-color:  #ffaa22;
   --cow-dark:   #884400;
   --cow-bg:     #120800;
+  --mkt-color:  #00ddaa;
+  --mkt-dark:   #007755;
+  --mkt-bg:     #001a12;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -107,12 +110,12 @@ header {
   position:relative; z-index:10;
   display:flex; gap:24px; flex-wrap:wrap; justify-content:center;
   padding: 0 20px 60px;
-  width:100%; max-width:1100px;
+  width:100%; max-width:1200px;
 }
 
 .card {
   position:relative;
-  flex:1; min-width:240px; max-width:320px;
+  flex:1; min-width:220px; max-width:280px;
   border-radius:16px; overflow:hidden;
   text-decoration:none;
   transition: transform .2s, box-shadow .2s;
@@ -128,6 +131,7 @@ header {
 .card--math { --float-d:3.8s; }
 .card--lang { --float-d:4.3s; }
 .card--cow  { --float-d:3.6s; }
+.card--mkt  { --float-d:4.1s; }
 .card:hover { animation-play-state:paused; }
 
 .card__bg {
@@ -163,6 +167,7 @@ header {
 .card--math .card__icon { color: var(--math-color); }
 .card--lang .card__icon { color: var(--lang-color); }
 .card--cow  .card__icon { color: var(--cow-color); }
+.card--mkt  .card__icon { color: var(--mkt-color); }
 
 .card__name {
   font-size:clamp(11px, 2.5vw, 16px);
@@ -172,6 +177,7 @@ header {
 .card--math .card__name { color: var(--math-color); }
 .card--lang .card__name { color: var(--lang-color); }
 .card--cow  .card__name { color: var(--cow-color); }
+.card--mkt  .card__name { color: var(--mkt-color); }
 
 .card__desc {
   font-size:clamp(5px, 1.2vw, 7px);
@@ -190,6 +196,7 @@ header {
 .card--math .tag { background:rgba(58,255,58,.12); color:var(--math-color); border:1px solid rgba(58,255,58,.3); }
 .card--lang .tag { background:rgba(102,102,255,.12); color:var(--lang-color); border:1px solid rgba(102,102,255,.3); }
 .card--cow  .tag { background:rgba(255,170,34,.12);  color:var(--cow-color);  border:1px solid rgba(255,170,34,.3); }
+.card--mkt  .tag { background:rgba(0,221,170,.12);   color:var(--mkt-color);  border:1px solid rgba(0,221,170,.3);  }
 
 .card__btn {
   display:block; width:100%;
@@ -211,6 +218,10 @@ header {
 .card--cow .card__btn {
   background:var(--cow-color); color:#000;
   box-shadow:0 4px 0 var(--cow-dark);
+}
+.card--mkt .card__btn {
+  background:var(--mkt-color); color:#000;
+  box-shadow:0 4px 0 var(--mkt-dark);
 }
 .card__btn:active {
   transform:translateY(3px);
@@ -335,6 +346,29 @@ footer {
         <span class="tag">Acción y velocidad</span>
       </div>
       <button class="card__btn">▶ JUGAR COWMATHBOY</button>
+    </div>
+  </a>
+
+  <a class="card card--mkt" href="https://crispacso.github.io/supermercadocuentas/">
+    <div class="card__bg"></div>
+    <div class="card__corner card__corner--tl">┌</div>
+    <div class="card__corner card__corner--tr">┐</div>
+    <div class="card__corner card__corner--bl">└</div>
+    <div class="card__corner card__corner--br">┘</div>
+    <div class="card__inner">
+      <span class="card__icon">🛒</span>
+      <div class="card__name">SuperMercado<br>Cuentas</div>
+      <div class="card__desc">
+        ¡Calculá precios, vueltos<br>
+        y totales en el super!
+      </div>
+      <div class="card__tags">
+        <span class="tag">💰 Precios y vuelto</span>
+        <span class="tag">🧾 Tickets de compra</span>
+        <span class="tag">🥦 Mercadería</span>
+        <span class="tag">💵 Billetes y monedas</span>
+      </div>
+      <button class="card__btn">▶ IR AL SUPER</button>
     </div>
   </a>
 
@@ -467,6 +501,7 @@ let lastFloat = 0;
 
 const mathSymbols = ['×','÷','+','−','=','²','√'];
 const cowSymbols  = ['×','🤠','★','!','?','10','='];
+const mktSymbols  = ['$','🛒','💲','%','💰','🧾','€'];
 const langSymbols = ['B','V','H','Z','LL','Y','á','é'];
 
 function spawnFloat(x, y, text, color) {
@@ -493,33 +528,27 @@ function drawFloaters() {
   ctx.globalAlpha = 1;
 }
 
-// Labels under each third
+// Labels under each quarter — 4 games
 function drawLabels() {
-  const z = CW / 3;
-  // Zone 1: DinoMath
-  ctx.fillStyle = 'rgba(58,255,58,0.13)';
-  ctx.fillRect(0, 0, z, GY-2);
-  ctx.fillStyle = 'rgba(58,255,58,0.5)';
-  ctx.font = "6px 'Press Start 2P',monospace";
+  const z = CW / 4;
+  const zones = [
+    { label:'DinoMath',   color:'rgba(58,255,58,',   text:'rgba(58,255,58,0.5)'   },
+    { label:'DinoLengua', color:'rgba(102,102,255,',  text:'rgba(102,102,255,0.5)' },
+    { label:'CowMathBoy', color:'rgba(255,170,34,',   text:'rgba(255,170,34,0.5)'  },
+    { label:'SuperMercado',color:'rgba(0,221,170,',   text:'rgba(0,221,170,0.5)'   },
+  ];
+  ctx.font = "5px 'Press Start 2P',monospace";
   ctx.textAlign = 'center';
-  ctx.fillText('DinoMath', z/2, 14);
-
-  // Zone 2: DinoLengua
-  ctx.fillStyle = 'rgba(102,102,255,0.13)';
-  ctx.fillRect(z, 0, z, GY-2);
-  ctx.fillStyle = 'rgba(102,102,255,0.5)';
-  ctx.fillText('DinoLengua', z + z/2, 14);
-
-  // Zone 3: CowMathBoy
-  ctx.fillStyle = 'rgba(255,170,34,0.13)';
-  ctx.fillRect(z*2, 0, z, GY-2);
-  ctx.fillStyle = 'rgba(255,170,34,0.5)';
-  ctx.fillText('CowMathBoy', z*2 + z/2, 14);
-
+  zones.forEach((zn, i) => {
+    ctx.fillStyle = zn.color + '0.13)';
+    ctx.fillRect(i*z, 0, z, GY-2);
+    ctx.fillStyle = zn.text;
+    ctx.fillText(zn.label, i*z + z/2, 14);
+  });
   // Dividers
   ctx.strokeStyle = 'rgba(255,255,255,0.08)';
   ctx.lineWidth = 1; ctx.setLineDash([4,6]);
-  [z, z*2].forEach(x => {
+  [z, z*2, z*3].forEach(x => {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, GY); ctx.stroke();
   });
   ctx.setLineDash([]);
@@ -542,12 +571,12 @@ function loop() {
   if (dinoX > CW - MARGIN) { dinoX = CW - MARGIN; dinoDir = -1; }
   if (dinoX < MARGIN)       { dinoX = MARGIN;       dinoDir =  1; }
 
-  // Spawn symbols near dino — 3 zones
+  // Spawn symbols near dino — 4 zones
   if (frame - lastFloat > 28) {
     lastFloat = frame;
-    const zone = dinoX < CW/3 ? 0 : dinoX < CW*2/3 ? 1 : 2;
-    const symbols = [mathSymbols, langSymbols, cowSymbols][zone];
-    const color   = ['#3aff3a','#8888ff','#ffaa22'][zone];
+    const zone = dinoX < CW/4 ? 0 : dinoX < CW/2 ? 1 : dinoX < CW*3/4 ? 2 : 3;
+    const symbols = [mathSymbols, langSymbols, cowSymbols, mktSymbols][zone];
+    const color   = ['#3aff3a','#8888ff','#ffaa22','#00ddaa'][zone];
     const sym = symbols[Math.floor(Math.random() * symbols.length)];
     spawnFloat(dinoX + 20 + Math.random()*20, GY - 30, sym, color);
   }
