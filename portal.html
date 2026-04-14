@@ -23,6 +23,9 @@
   --mkt-color:  #00ddaa;
   --mkt-dark:   #007755;
   --mkt-bg:     #001a12;
+  --war-color:  #00e5ff;
+  --war-dark:   #005577;
+  --war-bg:     #000d1a;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -132,6 +135,7 @@ header {
 .card--lang { --float-d:4.3s; }
 .card--cow  { --float-d:3.6s; }
 .card--mkt  { --float-d:4.1s; }
+.card--war  { --float-d:3.4s; }
 .card:hover { animation-play-state:paused; }
 
 .card__bg {
@@ -152,6 +156,16 @@ header {
   border:2px solid var(--cow-color);
   box-shadow: 0 0 0 1px #1a0800, 0 0 30px rgba(255,170,34,0.15), inset 0 0 30px rgba(255,170,34,0.05);
 }
+.card--mkt .card__bg {
+  background: radial-gradient(ellipse at 30% 40%, #001a12 0%, #000a07 70%);
+  border:2px solid var(--mkt-color);
+  box-shadow: 0 0 0 1px #001a12, 0 0 30px rgba(0,221,170,0.15), inset 0 0 30px rgba(0,221,170,0.05);
+}
+.card--war .card__bg {
+  background: radial-gradient(ellipse at 30% 40%, #000d1a 0%, #000508 70%);
+  border:2px solid var(--war-color);
+  box-shadow: 0 0 0 1px #000d1a, 0 0 30px rgba(0,229,255,0.2), inset 0 0 30px rgba(0,229,255,0.06);
+}
 
 .card__inner {
   position:relative; z-index:1;
@@ -168,6 +182,7 @@ header {
 .card--lang .card__icon { color: var(--lang-color); }
 .card--cow  .card__icon { color: var(--cow-color); }
 .card--mkt  .card__icon { color: var(--mkt-color); }
+.card--war  .card__icon { color: var(--war-color); }
 
 .card__name {
   font-size:clamp(11px, 2.5vw, 16px);
@@ -178,6 +193,7 @@ header {
 .card--lang .card__name { color: var(--lang-color); }
 .card--cow  .card__name { color: var(--cow-color); }
 .card--mkt  .card__name { color: var(--mkt-color); }
+.card--war  .card__name { color: var(--war-color); }
 
 .card__desc {
   font-size:clamp(5px, 1.2vw, 7px);
@@ -197,6 +213,7 @@ header {
 .card--lang .tag { background:rgba(102,102,255,.12); color:var(--lang-color); border:1px solid rgba(102,102,255,.3); }
 .card--cow  .tag { background:rgba(255,170,34,.12);  color:var(--cow-color);  border:1px solid rgba(255,170,34,.3); }
 .card--mkt  .tag { background:rgba(0,221,170,.12);   color:var(--mkt-color);  border:1px solid rgba(0,221,170,.3);  }
+.card--war  .tag { background:rgba(0,229,255,.10);   color:var(--war-color);  border:1px solid rgba(0,229,255,.3);  }
 
 .card__btn {
   display:block; width:100%;
@@ -222,6 +239,10 @@ header {
 .card--mkt .card__btn {
   background:var(--mkt-color); color:#000;
   box-shadow:0 4px 0 var(--mkt-dark);
+}
+.card--war .card__btn {
+  background:var(--war-color); color:#000;
+  box-shadow:0 4px 0 var(--war-dark);
 }
 .card__btn:active {
   transform:translateY(3px);
@@ -372,6 +393,29 @@ footer {
     </div>
   </a>
 
+  <a class="card card--war" href="https://crispacso.github.io/mathwars/">
+    <div class="card__bg"></div>
+    <div class="card__corner card__corner--tl">┌</div>
+    <div class="card__corner card__corner--tr">┐</div>
+    <div class="card__corner card__corner--bl">└</div>
+    <div class="card__corner card__corner--br">┘</div>
+    <div class="card__inner">
+      <span class="card__icon">🤖</span>
+      <div class="card__name">MathWars</div>
+      <div class="card__desc">
+        ¡Batallas de robots en el espacio!<br>
+        Respondé para destruir al enemigo.
+      </div>
+      <div class="card__tags">
+        <span class="tag">🚀 Combate espacial</span>
+        <span class="tag">🤖 Robots vs robots</span>
+        <span class="tag">⚡ Escudos y ataques</span>
+        <span class="tag">🌌 Niveles épicos</span>
+      </div>
+      <button class="card__btn">▶ JUGAR MATHWARS</button>
+    </div>
+  </a>
+
 </div>
 
 <footer>
@@ -502,6 +546,7 @@ let lastFloat = 0;
 const mathSymbols = ['×','÷','+','−','=','²','√'];
 const cowSymbols  = ['×','🤠','★','!','?','10','='];
 const mktSymbols  = ['$','🛒','💲','%','💰','🧾','€'];
+const warSymbols  = ['⚡','💥','🤖','★','!','×','?'];
 const langSymbols = ['B','V','H','Z','LL','Y','á','é'];
 
 function spawnFloat(x, y, text, color) {
@@ -528,14 +573,15 @@ function drawFloaters() {
   ctx.globalAlpha = 1;
 }
 
-// Labels under each quarter — 4 games
+// Labels under each fifth — 5 games
 function drawLabels() {
-  const z = CW / 4;
+  const z = CW / 5;
   const zones = [
-    { label:'DinoMath',   color:'rgba(58,255,58,',   text:'rgba(58,255,58,0.5)'   },
-    { label:'DinoLengua', color:'rgba(102,102,255,',  text:'rgba(102,102,255,0.5)' },
-    { label:'CowMathBoy', color:'rgba(255,170,34,',   text:'rgba(255,170,34,0.5)'  },
-    { label:'SuperMercado',color:'rgba(0,221,170,',   text:'rgba(0,221,170,0.5)'   },
+    { label:'DinoMath',    color:'rgba(58,255,58,',   text:'rgba(58,255,58,0.5)'   },
+    { label:'DinoLengua',  color:'rgba(102,102,255,',  text:'rgba(102,102,255,0.5)' },
+    { label:'CowMathBoy',  color:'rgba(255,170,34,',   text:'rgba(255,170,34,0.5)'  },
+    { label:'SuperMercado',color:'rgba(0,221,170,',    text:'rgba(0,221,170,0.5)'   },
+    { label:'MathWars',    color:'rgba(0,229,255,',    text:'rgba(0,229,255,0.5)'   },
   ];
   ctx.font = "5px 'Press Start 2P',monospace";
   ctx.textAlign = 'center';
@@ -548,7 +594,7 @@ function drawLabels() {
   // Dividers
   ctx.strokeStyle = 'rgba(255,255,255,0.08)';
   ctx.lineWidth = 1; ctx.setLineDash([4,6]);
-  [z, z*2, z*3].forEach(x => {
+  [z, z*2, z*3, z*4].forEach(x => {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, GY); ctx.stroke();
   });
   ctx.setLineDash([]);
@@ -571,12 +617,12 @@ function loop() {
   if (dinoX > CW - MARGIN) { dinoX = CW - MARGIN; dinoDir = -1; }
   if (dinoX < MARGIN)       { dinoX = MARGIN;       dinoDir =  1; }
 
-  // Spawn symbols near dino — 4 zones
+  // Spawn symbols near dino — 5 zones
   if (frame - lastFloat > 28) {
     lastFloat = frame;
-    const zone = dinoX < CW/4 ? 0 : dinoX < CW/2 ? 1 : dinoX < CW*3/4 ? 2 : 3;
-    const symbols = [mathSymbols, langSymbols, cowSymbols, mktSymbols][zone];
-    const color   = ['#3aff3a','#8888ff','#ffaa22','#00ddaa'][zone];
+    const zone = dinoX < CW/5 ? 0 : dinoX < CW*2/5 ? 1 : dinoX < CW*3/5 ? 2 : dinoX < CW*4/5 ? 3 : 4;
+    const symbols = [mathSymbols, langSymbols, cowSymbols, mktSymbols, warSymbols][zone];
+    const color   = ['#3aff3a','#8888ff','#ffaa22','#00ddaa','#00e5ff'][zone];
     const sym = symbols[Math.floor(Math.random() * symbols.length)];
     spawnFloat(dinoX + 20 + Math.random()*20, GY - 30, sym, color);
   }
